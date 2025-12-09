@@ -101,6 +101,425 @@ By the end of Phase 1, you should be able to sit in front of the terminal and:
 
 This phase is about **logic + database**, not about visuals.
 
+Other Details
+# Système de Prise de Rendez-vous chez le Médecin (Version Console)
+
+Bienvenue ! 🎉  
+
+Voici ton grand projet Python : un **système de prise de rendez-vous chez le médecin**.
+
+Tu vas commencer par construire une **application console entièrement fonctionnelle**  
+(la version dans la “fenêtre noire” / terminal) en utilisant :
+
+- Python  
+- MySQL  
+- La programmation orientée objet (POO : classes, objets)
+
+---
+
+## 1. Très important : ton objectif (pour l’instant)
+
+> **L’exigence pour l’instant est de construire une application console qui fonctionne complètement.**  
+> Si la logique fonctionne dans la fenêtre noire, la mettre plus tard sur un site web sera facile.  
+> Si la logique est cassée, le site web ne fonctionnera jamais.
+
+Donc ta mission **en ce moment** :
+
+- Oublie les sites web et le design.
+- Concentre-toi sur le fait de rendre la **logique correcte** :
+  - Prendre un rendez-vous
+  - Empêcher le double booking
+  - Annuler un rendez-vous
+  - Enregistrer et lire les données depuis la base MySQL
+
+Tu vas construire tout ça **étape par étape**, et tu devrais voir ton système devenir de plus en plus puissant. Essaie d’apprécier les moments où tu te diras :
+
+- « Aujourd’hui, mon programme peut se connecter à la base de données. »
+- « Maintenant il peut ajouter des médecins. »
+- « Maintenant il peut créer des rendez-vous. »
+- « Maintenant il peut les annuler. »
+
+Chaque étape est une vraie réussite. 🏆
+
+---
+
+## 2. Le problème réel
+
+Dans la vraie vie, quand quelqu’un est malade et veut voir un médecin :
+
+- Il doit parfois aller à l’hôpital et **attendre longtemps**.
+- Il ne sait pas toujours si le médecin est **disponible**.
+- Si le médecin annule un rendez-vous en urgence, le patient découvre souvent l’annulation **uniquement en arrivant sur place**.
+
+C’est une perte de temps et c’est stressant pour tout le monde.
+
+---
+
+## 3. Ce que ton application console va faire
+
+Tu vas construire une application console où :
+
+- Les **patients** peuvent :
+  - Être créés dans le système
+  - Prendre un rendez-vous avec un médecin
+  - Voir leurs rendez-vous
+  - Annuler un rendez-vous
+
+- Les **médecins** sont enregistrés avec des informations comme :
+  - Nom
+  - Spécialité
+  - Ville
+  - Email / Téléphone
+
+- Les **rendez-vous** font le lien entre :
+  - Un médecin
+  - Un patient
+  - Une date
+  - Un créneau horaire
+  - Un statut (`SCHEDULED`, `CANCELLED`, éventuellement `COMPLETED`)
+
+Toutes ces informations seront stockées dans une **base de données MySQL**.  
+Tu contrôles tout à travers des **menus texte** dans le terminal.
+
+---
+
+## 4. Technologies que tu vas utiliser (pour cette étape)
+
+Pour cette version console, tu vas utiliser :
+
+- **Python** – ton langage principal
+- **MySQL** – pour stocker les médecins, patients et rendez-vous
+- **Programmation Orientée Objet (POO)** – classes `Doctor`, `Patient`, `Appointment`
+- **Interface texte (console)** – menus et saisie utilisateur avec `print()` et `input()`
+
+---
+
+## 5. Étapes du projet (jalons)
+
+Voici les étapes que tu vas réaliser une par une.  
+Chaque étape comporte des **questions** (pour réfléchir) et des **tâches** (à réaliser).
+
+---
+
+### Étape 1 – Environnement & Connexion à la base de données
+
+**Questions :**
+
+1. Qu’est-ce qu’une **base de données** et pourquoi l’utilise-t-on plutôt que de simples listes Python ?
+2. Quelles informations doit-on **conserver de manière permanente** pour ce système ?
+
+**Tâches :**
+
+- Installer / configurer :
+  - MySQL Server
+  - Une bibliothèque Python pour MySQL (par ex. `mysql-connector-python` ou `PyMySQL`)
+- Créer une base de données, par exemple : `doctor_appointment_db`.
+- Créer un fichier `test_connection.py` qui :
+  - se connecte à la base de données,
+  - affiche `"Connection successful"` si la connexion fonctionne,
+  - ferme la connexion.
+
+Tu devrais pouvoir exécuter :
+
+```bash
+python test_connection.py
+```
+
+et voir un message de succès.
+
+---
+
+### Étape 2 – Concevoir les tables de la base de données
+
+**Questions :**
+
+1. Quelles **entités** as-tu dans ce système ? (au minimum : `Doctor`, `Patient`, `Appointment`)
+2. Quels champs (colonnes) chaque entité doit-elle avoir ?
+
+**Tâches :**
+
+- Décider de trois tables :
+  - `doctors`
+  - `patients`
+  - `appointments`
+- Pour chaque table, choisir les colonnes et les types. Par exemple :
+
+  **doctors**
+  - `id` (PRIMARY KEY, auto-incrément)
+  - `name`
+  - `specialty`
+  - `city`
+  - `email`
+  - `phone`
+
+  **patients**
+  - `id`
+  - `name`
+  - `email`
+  - `phone`
+  - `address`
+
+  **appointments**
+  - `id`
+  - `doctor_id` (référence à `doctors.id`)
+  - `patient_id` (référence à `patients.id`)
+  - `date` (par ex. `DATE` ou `VARCHAR`)
+  - `time_slot` (par ex. `'09:00-09:30'` en texte)
+  - `status` (`SCHEDULED`, `CANCELLED`, etc.)
+  - `created_at` (timestamp)
+
+- Écrire les requêtes `CREATE TABLE` pour ces tables dans un fichier `schema.sql`.
+- Exécuter `schema.sql` dans MySQL pour créer les tables.
+
+---
+
+### Étape 3 – Classes Python (modèle métier)
+
+**Questions :**
+
+1. Comment une classe Python peut-elle représenter la même chose qu’une ligne (row) dans une table ?
+2. Pourquoi est-ce utile d’avoir une classe `Doctor` au lieu de manipuler uniquement des dictionnaires ?
+
+**Tâches :**
+
+- Créer un fichier `models.py`.
+- Définir trois classes :
+  - `Doctor`
+  - `Patient`
+  - `Appointment`
+- Chaque classe doit :
+  - avoir une méthode `__init__` avec les bons attributs,
+  - avoir une méthode `__str__` ou `__repr__` pour que `print(doctor)` affiche quelque chose de lisible.
+
+- En bas de `models.py`, écrire un petit test :
+
+  ```python
+  if __name__ == "__main__":
+      d = Doctor(...)
+      p = Patient(...)
+      a = Appointment(...)
+      print(d)
+      print(p)
+      print(a)
+  ```
+
+Exécute le fichier et vérifie que l’affichage des objets est correct.
+
+---
+
+### Étape 4 – Module d’aide pour la base de données (`db.py`)
+
+**Question :**
+
+1. Pourquoi est-ce une bonne idée de centraliser la logique de connexion à la base de données dans un seul fichier au lieu de la copier partout ?
+
+**Tâches :**
+
+- Créer un fichier `db.py`.
+- Implémenter une fonction `get_connection()` qui :
+  - se connecte à ta base MySQL avec tes identifiants,
+  - retourne l’objet connexion.
+
+Exemple (conceptuel) :
+
+```python
+def get_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="...",
+        password="...",
+        database="doctor_appointment_db"
+    )
+```
+
+Tu importeras et utiliseras `get_connection()` dans les autres fichiers.
+
+---
+
+### Étape 5 – Doctor Repository (CRUD pour les médecins)
+
+**Questions :**
+
+1. Que signifie **CRUD** ?
+2. Comment le CRUD se traduit-il en opérations SQL ?
+
+   - Create → `INSERT`
+   - Read → `SELECT`
+   - Update → `UPDATE`
+   - Delete → `DELETE`
+
+**Tâches :**
+
+- Créer `doctor_repository.py`.
+- Implémenter des fonctions du type :
+
+  ```python
+  def create_doctor(doctor: Doctor) -> int: ...
+  def get_doctor_by_id(doctor_id: int) -> Doctor | None: ...
+  def get_all_doctors() -> list[Doctor]: ...
+  def update_doctor(doctor: Doctor) -> None: ...
+  def delete_doctor(doctor_id: int) -> None: ...
+  ```
+
+- Utiliser `get_connection()` pour accéder à la base.
+- En bas de `doctor_repository.py`, ajouter des tests qui :
+  - insèrent un médecin,
+  - le lisent,
+  - affichent la liste de tous les médecins.
+
+Exécute ce fichier et vérifie que le contenu de la base est mis à jour comme prévu.
+
+---
+
+### Étape 6 – Patient Repository (CRUD pour les patients)
+
+**Questions :**
+
+1. Quels champs sont nécessaires pour identifier et contacter un patient ?
+2. En quoi ce repository est-il similaire à celui des médecins ?
+
+**Tâches :**
+
+- Créer `patient_repository.py`.
+- Implémenter des fonctions :
+
+  ```python
+  def create_patient(patient: Patient) -> int: ...
+  def get_patient_by_id(patient_id: int) -> Patient | None: ...
+  def get_all_patients() -> list[Patient]: ...
+  def update_patient(patient: Patient) -> None: ...
+  def delete_patient(patient_id: int) -> None: ...
+  ```
+
+- Tester en ajoutant et en récupérant des patients.
+
+---
+
+### Étape 7 – Rendez-vous & règles de réservation
+
+**Questions :**
+
+1. Quelles règles doivent être respectées lors de la prise d’un rendez-vous ?
+   - Exemple : un médecin ne peut pas avoir deux rendez-vous au même créneau horaire le même jour.
+2. Que se passe-t-il si un patient essaie de réserver un créneau déjà pris ?
+
+**Tâches :**
+
+- Créer `appointment_repository.py`.
+- Implémenter des fonctions comme :
+
+  ```python
+  def create_appointment(appointment: Appointment) -> int: ...
+  def get_appointment_by_id(appointment_id: int) -> Appointment | None: ...
+  def get_appointments_by_doctor(doctor_id: int) -> list[Appointment]: ...
+  def get_appointments_by_patient(patient_id: int) -> list[Appointment]: ...
+  def get_appointments_by_doctor_and_date(doctor_id: int, date: str) -> list[Appointment]: ...
+  def cancel_appointment(appointment_id: int) -> None: ...
+  ```
+
+- Dans `create_appointment` :
+  - Avant de faire l’`INSERT`, interroger la base pour voir s’il existe déjà un rendez-vous avec le même `doctor_id`, la même `date` et le même `time_slot` avec un statut non annulé.
+  - Si oui, refuser la réservation (par exemple en retournant `None` ou en levant une exception).
+
+C’est ta **logique de réservation principale**.
+
+---
+
+### Étape 8 – Menu console pour l’admin
+
+**Questions :**
+
+1. Quelles actions un “admin” doit-il pouvoir faire sur les médecins ?
+2. En quoi un menu texte simple peut-il t’aider à tester tes repositories ?
+
+**Tâches :**
+
+- Créer `admin_console.py`.
+- Implémenter une boucle comme :
+
+  ```text
+  1. Ajouter un médecin
+  2. Lister tous les médecins
+  3. Mettre à jour un médecin
+  4. Supprimer un médecin
+  5. Quitter
+  ```
+
+- Utiliser les fonctions de `doctor_repository` à l’intérieur du menu.
+- Bien gérer les saisies utilisateur (entiers, chaînes de caractères, valeurs vides).
+
+Tu devrais pouvoir exécuter :
+
+```bash
+python admin_console.py
+```
+
+et gérer les médecins depuis le terminal.
+
+---
+
+### Étape 9 – Console patient (réservation & annulation)
+
+**Questions :**
+
+1. De quoi un patient a-t-il besoin pour prendre un rendez-vous ?
+2. Comment peux-tu guider l’utilisateur étape par étape dans la console pour qu’il ne se perde pas ?
+
+**Tâches :**
+
+- Créer `patient_console.py`.
+- Implémenter un flux utilisateur comme :
+
+  1. Demander : « Es-tu un patient existant ? (O/N) »
+     - Si **N** : créer un nouveau patient et l’enregistrer dans la base.
+     - Si **O** : demander l’ID du patient et le charger.
+  2. Afficher un menu :
+
+     ```text
+     1. Voir mes informations
+     2. Lister tous les médecins
+     3. Prendre un rendez-vous
+     4. Voir mes rendez-vous
+     5. Annuler un rendez-vous
+     6. Quitter
+     ```
+
+  3. “Prendre un rendez-vous” doit :
+     - lister les médecins avec leurs IDs,
+     - demander l’ID du médecin, la date et le créneau horaire,
+     - appeler `create_appointment` et gérer le cas où le créneau est déjà pris.
+
+  4. “Voir mes rendez-vous” doit afficher tous les rendez-vous du patient courant.
+  5. “Annuler un rendez-vous” doit :
+     - lister les rendez-vous du patient avec leurs IDs,
+     - demander lequel annuler,
+     - appeler `cancel_appointment`.
+
+---
+
+## 6. Comment travailler sur ce projet
+
+- Avance **une étape à la fois**.
+- Essaie d’avoir **quelque chose qui fonctionne** à la fin de chaque étape.
+- C’est normal si tu :
+  - fais des erreurs,
+  - dois corriger des bugs,
+  - dois améliorer ton design au fur et à mesure.
+
+Ce qui compte, c’est que :
+
+- Ta base de données fonctionne.
+- Tes classes ont du sens.
+- Tes repositories parlent correctement avec la base.
+- Tes menus console permettent à un utilisateur de :
+  - créer des médecins et des patients,
+  - prendre des rendez-vous,
+  - les consulter et les annuler.
+
+Une fois que ton **application console sera solide**, tout le reste plus tard (par exemple, ajouter une interface web) sera beaucoup plus facile.
+
+Amuse-toi bien à construire ce système, et n’oublie pas de célébrer chaque petite victoire. 🚀
+
 ---
 
 ### Phase 2 – Basic Web Application (Django + MySQL, Core Features)

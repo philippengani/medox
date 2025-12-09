@@ -5,7 +5,7 @@ connexion = _sqlite3.connect("Musann.db")
 curseur = connexion.cursor()
 
 curseur.execute("""CREATE TABLE Docteur 
-    (Docteur_id INTEGER NOT NULL PRIMARY KEY ,
+    (id INTEGER PRIMARY KEY AUTOINCREMENT,
     Nom VARCHAR, Prenom VARCHAR,
     Age INTEGER, 
     Type VARCHAR, 
@@ -14,7 +14,7 @@ curseur.execute("""CREATE TABLE Docteur
     Localite VARCHAR );""")
 
 curseur.execute("""CREATE TABLE Patient
-      (patient_id INTEGER NOT NULL PRIMARY KEY ,
+      (id INTEGER PRIMARY KEY AUTOINCREMENT ,
         Nom VARCHAR, Prenom VARCHAR, 
         date_naissance DATE ,
         genre_id INTEGER,
@@ -22,7 +22,7 @@ curseur.execute("""CREATE TABLE Patient
         email VARCHAR   );""")
 
 curseur.execute("""CREATE TABLE Rendezvous (
-    rdv_id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     Docteur_id INTEGER NOT NULL,
     patient_id INTEGER NOT NULL,
     date_heure DATETIME NOT NULL,

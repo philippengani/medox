@@ -82,3 +82,5 @@ class Rendez_vous(Docteur):
     def afficher_rendezvous(self):
         for rdv in self.rendezvous:
             print(rdv)
+
+def create_patient(patient: Patient):
